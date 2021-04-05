@@ -46,8 +46,10 @@ public class Main {
     if (algorithm == 0) {
       solution = search.naiveBaseline(test1, deadline);
     } else if (algorithm == 1) {
-      solution = search.solve(test1, deadline);
-    } else {
+      solution = search.solve1(test1, deadline);
+    } else if (algorithm == 2) {
+      solution = search.solve2(test1, deadline);
+    }else {
       System.out.println("ERROR: Given algorithm number does not exist!");
       System.exit(1);
     }
