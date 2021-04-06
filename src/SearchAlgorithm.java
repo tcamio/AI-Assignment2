@@ -1,4 +1,7 @@
 public class SearchAlgorithm {
+  int k = 20;
+  double lam = 0.045;
+  int limit = 100;
 
   // Your search algorithm should return a solution in the form of a valid
   // schedule before the deadline given (deadline is given by system time in ms)
@@ -10,10 +13,10 @@ public class SearchAlgorithm {
     // YOUR CODE HERE
     // Simulated annealing
     // for t = 1 to INFINITY do
-    int timeStep = 1
+    int timeStep = 1;
     while (true) {
         // temperature <- schedule(t)
-        double temperature = getTemp(timeStep)
+        double temperature = getTemp(timeStep);
         timeStep++;
 
         // If temperature = 0 then return current
@@ -22,6 +25,7 @@ public class SearchAlgorithm {
         }
 
         // Schedule next = a randomly selected successor of current
+        Schedule next = problem.getEmptySchedule();
         double deltaE = problem.evaluateSchedule(solution) - problem.evaluateSchedule(next);
 
         if (deltaE > 0) {
@@ -29,17 +33,12 @@ public class SearchAlgorithm {
         } else {
             if (Math.random() <= Math.exp(deltaE/temperature)) {
                 solution = next;
-            }        
+            }
         }
     }
 
-    return solution;
+    // return solution; This is unreachable, should have a break somewhere since the while is infinite or just remove
   }
-
-
-  int k = 20;
-  double lam = 0.045;
-  int limit = 100;
 
   public double getTemp(int t) {
 		if (t < limit)
@@ -65,15 +64,15 @@ public class SearchAlgorithm {
     // get an empty solution to start from
     Schedule solution = problem.getEmptySchedule();
 
-    for (int i = 0; i < problem.courses.size(); i++) {
-      Course c = problem.courses.get(i);
+    for (int i = 0; i < problem.getCourses().size(); i++) {
+      Course c = problem.getCourses().get(i);
       boolean scheduled = false;
-      for (int j = 0; j < c.timeSlotValues.length; j++) {
+      for (int j = 0; j < c.getTimeSlotValues().length; j++) {
         if (scheduled) break;
-        if (c.timeSlotValues[j] > 0) {
-          for (int k = 0; k < problem.rooms.size(); k++) {
-            if (solution.schedule[k][j] < 0) {
-              solution.schedule[k][j] = i;
+        if (c.getTimeSlotValues()[j] > 0) {
+          for (int k = 0; k < problem.getRooms().size(); k++) {
+            if (solution.getSchedule()[k][j] < 0) {
+              solution.getSchedule()[k][j] = i;
               scheduled = true;
               break;
             }

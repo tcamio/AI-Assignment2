@@ -1,17 +1,16 @@
 import java.util.*;
 
 public class SchedulingProblem {
+  private static final int NUM_TIME_SLOTS = 10;
+  private static final double MAX_X_COORD = 10;
+  private static final double MAX_Y_COORD = 10;
+  private static final double DISTANCE_PENALTY = 2.5d;
 
-  public static final int NUM_TIME_SLOTS = 10;
-  public static final double MAX_X_COORD = 10;
-  public static final double MAX_Y_COORD = 10;
-  public static final double DISTANCE_PENALTY = 2.5d;
+  private ArrayList<Building> buildings;
+  private ArrayList<Room> rooms;
+  private ArrayList<Course> courses;
 
-  ArrayList<Building> buildings;
-  ArrayList<Room> rooms;
-  ArrayList<Course> courses;
-
-  Random random;
+  private Random random;
 
   SchedulingProblem(long seed) {
     if (seed > 0) {
@@ -26,35 +25,34 @@ public class SchedulingProblem {
   }
 
   public void createRandomInstance(int nBuildings, int nRooms, int nCourses) {
-
     // create random buildings
     for (int i = 0; i < nBuildings; i++) {
       Building tmp = new Building();
-      tmp.xCoord = random.nextDouble() * MAX_X_COORD;
-      tmp.yCoord = random.nextDouble() * MAX_Y_COORD;
+      tmp.setxCoord(random.nextDouble() * MAX_X_COORD);
+      tmp.setyCoord(random.nextDouble() * MAX_Y_COORD);;
       buildings.add(tmp);
     }
 
     // create random rooms
     for (int i = 0; i < nRooms; i++) {
       Room tmp = new Room();
-      tmp.b = buildings.get((int) (random.nextDouble() * nBuildings));
-      tmp.capacity = ((int)(random.nextDouble() * 70)) + 30;
+      tmp.setBuilding(buildings.get((int) (random.nextDouble() * nBuildings)));;
+      tmp.setCapacity(((int)(random.nextDouble() * 70)) + 30);
       rooms.add(tmp);
     }
 
     // create random courses
     for (int i = 0; i < nCourses; i++) {
       Course tmp = new Course();
-      tmp.enrolledStudents = ((int) (random.nextDouble() * 70)) + 30;
-      tmp.preferredLocation = buildings.get((int) (random.nextDouble() * nBuildings));
-      tmp.value = random.nextDouble() * 100;
-      tmp.timeSlotValues = new int[NUM_TIME_SLOTS];
+      tmp.setEnrolledStudents(((int) (random.nextDouble() * 70)) + 30);
+      tmp.setPreferredLocation(buildings.get((int) (random.nextDouble() * nBuildings)));
+      tmp.setValue(random.nextDouble() * 100);
+      tmp.setTimeSlotValues(new int[NUM_TIME_SLOTS]);
       for (int j = 0; j < NUM_TIME_SLOTS; j++) {
         if (random.nextDouble() < 0.3d) {
-          tmp.timeSlotValues[j] = 0;
+          tmp.getTimeSlotValues()[j] = 0;
         } else {
-          tmp.timeSlotValues[j] = (int)(random.nextDouble() * 10);
+          tmp.getTimeSlotValues()[j] = (int)(random.nextDouble() * 10);
         }
       }
       courses.add(tmp);
@@ -66,14 +64,14 @@ public class SchedulingProblem {
 
     for (int i = 0; i < rooms.size(); i++) {
       for (int j = 0; j < NUM_TIME_SLOTS; j++) {
-        tmp.schedule[i][j] = -1;
+        tmp.getSchedule()[i][j] = -1;
       }
     }
     return tmp;
   }
 
   public double evaluateSchedule(Schedule solutionSchedule) {
-    int[][] s = solutionSchedule.schedule;
+    int[][] s = solutionSchedule.getSchedule();
 
     if (s.length != rooms.size() || s[0].length != NUM_TIME_SLOTS) {
       System.out.println("ERROR: invalid schedule dimensions");
@@ -110,24 +108,24 @@ public class SchedulingProblem {
         Room r = rooms.get(i);
 
         // course was not assigned to a feasible time slot
-        if (c.timeSlotValues[j] <= 0) {
+        if (c.getTimeSlotValues()[j] <= 0) {
           continue;
         }
 
         // course was assigned to a room that is too small
-        if (c.enrolledStudents > r.capacity) {
+        if (c.getEnrolledStudents() > r.getCapacity()) {
           continue;
         }
 
         // add in the value for the class
-        value += c.value;
-        value += c.timeSlotValues[j];
+        value += c.getValue();
+        value += c.getTimeSlotValues()[j];
 
         // calculate the distance penalty
-        Building b1 = r.b;
-        Building b2 = c.preferredLocation;
-        double xDist = (b1.xCoord - b2.xCoord) * (b1.xCoord - b2.xCoord);
-        double yDist = (b1.yCoord - b2.yCoord) * (b1.yCoord - b2.yCoord);
+        Building b1 = r.getBuilding();
+        Building b2 = c.getPreferredLocation();
+        double xDist = (b1.getxCoord() - b2.getxCoord()) * (b1.getxCoord() - b2.getxCoord());
+        double yDist = (b1.getyCoord() - b2.getyCoord()) * (b1.getyCoord() - b2.getyCoord());
         double dist = Math.sqrt(xDist + yDist);
 
         value -= DISTANCE_PENALTY * dist;
@@ -137,4 +135,43 @@ public class SchedulingProblem {
     return value;
   }
 
+  public void setBuildings(ArrayList<Building> buildings) {
+      this.buildings = buildings;
+  }
+
+  public void setCourses(ArrayList<Course> courses) {
+      this.courses = courses;
+  }
+
+  public void setRooms(ArrayList<Room> rooms) {
+      this.rooms = rooms;
+  }
+
+  public ArrayList<Building> getBuildings() {
+      return buildings;
+  }
+
+  public ArrayList<Course> getCourses() {
+      return courses;
+  }
+
+  public static double getDistancePenalty() {
+      return DISTANCE_PENALTY;
+  }
+
+  public static double getMaxXCoord() {
+      return MAX_X_COORD;
+  }
+
+  public static double getMaxYCoord() {
+      return MAX_Y_COORD;
+  }
+
+  public static int getNumTimeSlots() {
+      return NUM_TIME_SLOTS;
+  }
+
+  public ArrayList<Room> getRooms() {
+      return rooms;
+  }
 }
