@@ -33,7 +33,6 @@ public class Main {
     System.out.println("Algorithm number: " + algorithm);
     System.out.println("Random seed: " + seed);
 
-
     SchedulingProblem test1 = new SchedulingProblem(seed);
     test1.createRandomInstance(nBuildings, nRooms, nCourses);
 
@@ -49,7 +48,7 @@ public class Main {
       solution = search.solve1(test1, deadline);
     } else if (algorithm == 2) {
       solution = search.solve2(test1, deadline);
-    }else {
+    } else {
       System.out.println("ERROR: Given algorithm number does not exist!");
       System.exit(1);
     }
@@ -65,5 +64,5 @@ public class Main {
     System.out.println();
     System.out.println("Score: " + score);
     System.out.println();
-  }  
+  }
 }
