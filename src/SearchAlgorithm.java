@@ -85,122 +85,111 @@ public class SearchAlgorithm {
 
   // This solution uses the genetic algorithm
   public Schedule solve2(SchedulingProblem problem, long deadline) {
-    ArrayList<Schedule> population = new ArrayList<Schedule>();
-    population = generateRandomPopulation(problem, 50); // Making a population of size 50
-
-    Schedule solution = geneticAlgorithm(problem, population, deadline);
+    Schedule solution = problem.getEmptySchedule();
+    backtrackingSearch(problem, solution, problem.courses.size() - 1, 0, deadline);
     return solution;
   }
 
-  // TODO: improve if possible
-  private ArrayList<Schedule> generateRandomPopulation(SchedulingProblem problem, int populationSize) {
-    ArrayList<Schedule> population = new ArrayList<Schedule>();
-    int nCourses = problem.courses.size();
-    int r, c;
-
-    for (int i = 0; i < populationSize; i++) {
-      Schedule tmp = problem.getEmptySchedule();
-
-      for (int j = 0; j < nCourses; j++) {
-        boolean set = false;
-        while (!set) {
-          r = random.nextInt(tmp.schedule.length);
-          c = random.nextInt(tmp.schedule[r].length);
-
-          if (tmp.schedule[r][c] == -1) {
-            set = true;
-            tmp.schedule[r][c] = j;
-          }
+  public void printSchedule(Schedule solution) {
+    for (int i = 0; i < solution.schedule.length; i++) {
+      for (int j = 0; j < solution.schedule[0].length; j++) {
+        if (solution.schedule[i][j] > -1) {
+          System.out.print(" " + solution.schedule[i][j] + " ");
+        } else {
+          System.out.print(solution.schedule[i][j] + " ");
         }
-      }
-      population.add(tmp);
-    }
-
-    return population;
-  }
-
-  // TODO: find a good threshold for the fitness function
-  public Schedule geneticAlgorithm(SchedulingProblem problem, ArrayList<Schedule> population, long deadline) {
-    Schedule x;
-    Schedule y;
-    Schedule child;
-    ArrayList<Schedule> new_population;
-
-    System.out.println(population.size());
-
-    while (deadline > System.currentTimeMillis()) {
-      new_population = new ArrayList<Schedule>();
-
-      for (int i = 0; i < population.size(); i++) {
-        x = randomSelection(population);
-        y = randomSelection(population);
-        child = reproduce(problem, x, y);
-        if (random.nextInt(100) < 5) { // 5 % probability of choosing this
-          child = mutate(child);
-        }
-        new_population.add(child);
-      }
-      population = new_population;
-    }
-    System.out.println(population.size());
-    Schedule best = getBestIndividual(problem, population);
-    System.out.println(best);
-    System.out.println("BEST INDIV: " + problem.evaluateSchedule(best));
-    System.out.println("\nSOLUTION\n");
-    for (int i = 0; i < best.schedule.length; i++) {
-      for (int j = 0; j < best.schedule[i].length; j++) {
-        System.out.print(best.schedule[i][j] + " ");
       }
       System.out.println();
     }
-    return best;
   }
 
-  public Schedule reproduce(SchedulingProblem problem, Schedule x, Schedule y) {
-    int n = x.schedule.length;
-    int c = random.nextInt(n);
+  public void backtrackingSearch(SchedulingProblem problem, Schedule solution, int nCourses, int currentCourse,
+      long deadline) {
+    int originalRow = (currentCourse / nCourses);
+    if (currentCourse != nCourses) {
+      setFirstFree(solution.schedule[originalRow], currentCourse);
+      backtrackingSearch(problem, solution, nCourses, currentCourse + 1, deadline);
+    } else {
+      setFirstFree(solution.schedule[originalRow], currentCourse);
+    }
 
-    // This is the same as append(substring(x, 1, c), substring(y, c + 1, n))
-    Schedule child = problem.getEmptySchedule();
+    double max = problem.evaluateSchedule(solution);
+    double score;
+    int prevRow = originalRow;
 
-    for (int i = 0; i < x.schedule.length; i++) {
-      if (i < c) {
-        for (int j = 0; j < child.schedule[i].length; j++) {
-          child.schedule[i][j] = x.schedule[i][j];
-        }
-      } else {
-        for (int j = 0; j < child.schedule[i].length; j++) {
-          child.schedule[i][j] = y.schedule[i][j];
+    // checking the next rows
+    for (int i = prevRow + 1; i < solution.schedule.length; i++) {
+      if (deadline < System.currentTimeMillis() + 100) {
+        return;
+      }
+      if (checkAvailable(solution.schedule[i])) {
+        removeLastSet(solution.schedule[prevRow], currentCourse);
+        setFirstFree(solution.schedule[i], currentCourse);
+        score = problem.evaluateSchedule(solution);
+        // if the score is less than the max, then it means we are farther from the
+        // preferred building
+        if (score < max) {
+          removeLastSet(solution.schedule[i], currentCourse);
+          setFirstFree(solution.schedule[prevRow], currentCourse);
+          break;
+        } else {
+          max = score;
+          prevRow = i;
         }
       }
     }
-    return child;
-  }
 
-  // TODO: implement
-  private Schedule mutate(Schedule s) {
-    return s;
-  }
-
-  public Schedule getBestIndividual(SchedulingProblem problem, ArrayList<Schedule> population) {
-    if (population.size() > 0) {
-      Schedule best = population.get(0);
-      double bestFitness = problem.evaluateSchedule(best);
-      for (int i = 1; i < population.size(); i++) {
-        double t = problem.evaluateSchedule(population.get(i));
-        if (t > bestFitness) {
-          bestFitness = t;
-          best = population.get(i);
+    /*
+     * Checking rows before original row. First checking if the score was better
+     * before, this will help with performance since we won't double check
+     */
+    if (prevRow != originalRow) {
+      for (int i = prevRow - 1; i >= 0; i--) {
+        if (deadline < System.currentTimeMillis() + 100) {
+          return;
+        }
+        if (checkAvailable(solution.schedule[i])) {
+          removeLastSet(solution.schedule[prevRow], currentCourse);
+          setFirstFree(solution.schedule[i], currentCourse);
+          score = problem.evaluateSchedule(solution);
+          if (score < max) {
+            removeLastSet(solution.schedule[i], currentCourse);
+            setFirstFree(solution.schedule[prevRow], currentCourse);
+            break;
+          } else {
+            max = score;
+            prevRow = i;
+          }
         }
       }
-      return best;
     }
-    return null;
   }
 
-  private Schedule randomSelection(ArrayList<Schedule> population) {
-    Random random = new Random();
-    return population.get(random.nextInt(population.size()));
+  public void removeLastSet(int[] arr, int val) {
+    for (int i = 0; i < arr.length; i++) {
+      if (arr[i] == val) {
+        arr[i] = -1;
+        return;
+      }
+    }
+  }
+
+  public void setFirstFree(int[] arr, int val) {
+    for (int i = 0; i < arr.length; i++) {
+      if (arr[i] == -1) {
+        arr[i] = val;
+        return;
+      }
+    }
+  }
+
+  public boolean checkAvailable(int[] arr) {
+    for (int i = 0; i < arr.length; i++) {
+      if (arr[i] == -1) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // This is a very naive baseline scheduling strategy
@@ -226,13 +215,6 @@ public class SearchAlgorithm {
           }
         }
       }
-    }
-    System.out.println("\nSOLUTION\n");
-    for (int i = 0; i < solution.schedule.length; i++) {
-      for (int j = 0; j < solution.schedule[i].length; j++) {
-        System.out.print(solution.schedule[i][j] + " ");
-      }
-      System.out.println();
     }
     return solution;
   }
