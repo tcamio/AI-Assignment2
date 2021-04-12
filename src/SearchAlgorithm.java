@@ -11,44 +11,83 @@ public class SearchAlgorithm {
 
     // YOUR CODE HERE
     // Simulated annealing
-    // for t = 1 to INFINITY do
-    int timeStep = 1;
-    while (true) {
-      // temperature <- schedule(t)
-      double temperature = getTemp(timeStep);
-      timeStep++;
+    // Set initial temp
+    double temp = 1000000;
 
-      // If temperature = 0 then return current
-      if (temperature == 0.0) {
+    // Cooling rate
+    double coolingRate = 0.0001;
+
+    int step = 0;
+
+    // for t = 1 to INFINITY do
+    while (temp > 1) {
+      // If T = 0 then return current
+      if (temp == 0.0) {
         return solution;
       }
 
-      // Schedule next = a randomly selected successor of current
-      Schedule next = problem.getEmptySchedule();
-      double deltaE = problem.evaluateSchedule(solution) - problem.evaluateSchedule(next);
+      // next <- a randomly selected successor of current solution
+      Schedule next = newSolution(problem);
+
+      // deltaE <- VALUE(next) - VALUE(current)
+      double deltaE = problem.evaluateSchedule(next) - problem.evaluateSchedule(solution);
+
+      //System.out.println(deltaE);
 
       if (deltaE > 0) {
         solution = next;
       } else {
-        if (Math.random() <= Math.exp(deltaE / temperature)) {
+        if (Math.random() <= Math.exp(deltaE / temp)) {
           solution = next;
         }
       }
+
+      // Cool System
+      temp *= (1 - coolingRate);
+
+      if (deadline < System.currentTimeMillis() + 100) {
+            break;
+      }
+
+      step++;
+      //System.out.println(step);
     }
 
-    // return solution;
+    /*
+    // Print out solution
+    for (int i = 0; i < solution.schedule.length; i++) {
+        for (int j = 0; j <solution.schedule[0].length; j++) {
+            if (solution.schedule[i][j] > -1) {
+                System.out.print(" " + solution.schedule[i][j] + " ");
+            } else {
+                System.out.print(solution.schedule[i][j] + " ");
+            }
+        }
+        System.out.println();
+    }
+    */
+
+    return solution;
   }
 
-  int k = 20;
-  double lam = 0.045;
-  int limit = 100;
+  public Schedule newSolution(SchedulingProblem problem) {
+        Random random = new Random();
 
-  public double getTemp(int t) {
-    if (t < limit)
-      return k * Math.exp((-1) * lam * t);
-    else
-      return 0.0;
+        Schedule newSolution = problem.getEmptySchedule();
+
+        int NUM_TIME_SLOTS = newSolution.schedule[0].length;
+        int nRooms = newSolution.schedule.length;
+        int nCourses = problem.courses.size();
+
+        for (int i = 0; i < nCourses; i++) {
+            int randCol = random.nextInt(NUM_TIME_SLOTS);
+            int randRow = random.nextInt(nRooms);
+            newSolution.schedule[randRow][randCol] = i;
+        }
+
+        return newSolution;
   }
+
 
   // This solution uses the genetic algorithm from above
   public Schedule solve2(SchedulingProblem problem, long deadline) {
