@@ -32,7 +32,7 @@ public class SearchAlgorithm {
       // deltaE <- VALUE(next) - VALUE(current)
       double deltaE = problem.evaluateSchedule(next) - problem.evaluateSchedule(solution);
 
-      //System.out.println(deltaE);
+      // System.out.println(deltaE);
 
       if (deltaE > 0) {
         solution = next;
@@ -46,48 +46,41 @@ public class SearchAlgorithm {
       temp *= (1 - coolingRate);
 
       if (deadline < System.currentTimeMillis() + 100) {
-            break;
+        break;
       }
 
       step++;
-      //System.out.println(step);
+      // System.out.println(step);
     }
 
     /*
-    // Print out solution
-    for (int i = 0; i < solution.schedule.length; i++) {
-        for (int j = 0; j <solution.schedule[0].length; j++) {
-            if (solution.schedule[i][j] > -1) {
-                System.out.print(" " + solution.schedule[i][j] + " ");
-            } else {
-                System.out.print(solution.schedule[i][j] + " ");
-            }
-        }
-        System.out.println();
-    }
-    */
+     * // Print out solution for (int i = 0; i < solution.schedule.length; i++) {
+     * for (int j = 0; j <solution.schedule[0].length; j++) { if
+     * (solution.schedule[i][j] > -1) { System.out.print(" " +
+     * solution.schedule[i][j] + " "); } else {
+     * System.out.print(solution.schedule[i][j] + " "); } } System.out.println(); }
+     */
 
     return solution;
   }
 
   public Schedule newSolution(SchedulingProblem problem) {
-        Random random = new Random();
+    Random random = new Random();
 
-        Schedule newSolution = problem.getEmptySchedule();
+    Schedule newSolution = problem.getEmptySchedule();
 
-        int NUM_TIME_SLOTS = newSolution.schedule[0].length;
-        int nRooms = newSolution.schedule.length;
-        int nCourses = problem.courses.size();
+    int NUM_TIME_SLOTS = newSolution.schedule[0].length;
+    int nRooms = newSolution.schedule.length;
+    int nCourses = problem.courses.size();
 
-        for (int i = 0; i < nCourses; i++) {
-            int randCol = random.nextInt(NUM_TIME_SLOTS);
-            int randRow = random.nextInt(nRooms);
-            newSolution.schedule[randRow][randCol] = i;
-        }
+    for (int i = 0; i < nCourses; i++) {
+      int randCol = random.nextInt(NUM_TIME_SLOTS);
+      int randRow = random.nextInt(nRooms);
+      newSolution.schedule[randRow][randCol] = i;
+    }
 
-        return newSolution;
+    return newSolution;
   }
-
 
   // This solution uses the genetic algorithm from above
   public Schedule solve2(SchedulingProblem problem, long deadline) {
