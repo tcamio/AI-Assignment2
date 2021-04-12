@@ -18,8 +18,6 @@ public class SearchAlgorithm {
     // Cooling rate
     double coolingRate = 0.0001;
 
-    int step = 0;
-
     // for t = 1 to INFINITY do
     while (temp > 1) {
       // If T = 0 then return current
@@ -32,8 +30,6 @@ public class SearchAlgorithm {
 
       // deltaE <- VALUE(next) - VALUE(current)
       double deltaE = problem.evaluateSchedule(next) - problem.evaluateSchedule(solution);
-
-      // System.out.println(deltaE);
 
       if (deltaE > 0) {
         solution = next;
@@ -50,8 +46,6 @@ public class SearchAlgorithm {
         break;
       }
 
-      step++;
-      // System.out.println(step);
     }
 
     /*
@@ -65,6 +59,7 @@ public class SearchAlgorithm {
     return solution;
   }
 
+  // Return a randomly generated schedule solution
   public Schedule newSolution(SchedulingProblem problem) {
     Random random = new Random();
 
