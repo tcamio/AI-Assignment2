@@ -1,0 +1,9 @@
+#Instruction for running code
+
+In command line, input "java -jar pa2.jar"
+
+
+# Author
+
+Esteban Munoz
+Toshiki Kamio
