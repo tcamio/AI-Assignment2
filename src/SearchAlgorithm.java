@@ -1,5 +1,4 @@
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 
 public class SearchAlgorithm {
 
@@ -54,10 +53,11 @@ public class SearchAlgorithm {
   // This solution uses the genetic algorithm from above
   public Schedule solve2(SchedulingProblem problem, long deadline) {
     ArrayList<Schedule> population = new ArrayList<Schedule>();
-    population = generateRandomPopulation();
+    population = generateRandomPopulation(problem, 50); // Making a population of size 50
     return geneticAlgorithm(problem, population, deadline);
   }
 
+  // TODO: find a good threshold for the fitness function
   public Schedule geneticAlgorithm(SchedulingProblem problem, ArrayList<Schedule> population, long deadline) {
     Schedule x;
     Schedule y;
@@ -80,8 +80,8 @@ public class SearchAlgorithm {
       }
       population = new_population;
     }
-    Schedule best = getBestIndividual(population);
-    System.out.println("BEST INDIV: " + fitnessFunction(best));
+    Schedule best = getBestIndividual(problem, population);
+    System.out.println("BEST INDIV: " + problem.evaluateSchedule(best));
     return best;
   }
 
@@ -109,26 +109,33 @@ public class SearchAlgorithm {
   }
 
   // TODO: implement
-  private ArrayList<Schedule> generateRandomPopulation() {
-    return new ArrayList<Schedule>();
+  private ArrayList<Schedule> generateRandomPopulation(SchedulingProblem problem, int populationSize) {
+    ArrayList<Schedule> population = new ArrayList<Schedule>();
+
+    for (int i = 0; i < populationSize; i++) {
+      Schedule tmp = problem.getEmptySchedule();
+
+      for (int r = 0; r < tmp.schedule.length; r++) {
+        for (int j = 0; j < tmp.schedule.length; j++) {
+          tmp.schedule[r][j] = -1;
+        }
+      }
+    }
+
+    return population;
   }
 
-  public Schedule getBestIndividual(ArrayList<Schedule> population) {
+  public Schedule getBestIndividual(SchedulingProblem problem, ArrayList<Schedule> population) {
     Schedule best = population.get(0);
-    int bestFitness = fitnessFunction(best);
+    double bestFitness = problem.evaluateSchedule(best);
     for (int i = 1; i < population.size(); i++) {
-      int t = fitnessFunction(population.get(i));
+      double t = problem.evaluateSchedule(population.get(i));
       if (t > bestFitness) {
         bestFitness = t;
         best = population.get(i);
       }
     }
     return best;
-  }
-
-  // TODO: implement
-  private int fitnessFunction(Schedule best) {
-    return 0;
   }
 
   private Schedule randomSelection(ArrayList<Schedule> population) {
@@ -160,7 +167,13 @@ public class SearchAlgorithm {
         }
       }
     }
-
+    System.out.println("\nSOLUTION\n");
+    for (int i = 0; i < solution.schedule.length; i++) {
+      for (int j = 0; j < solution.schedule[i].length; j++) {
+        System.out.print(solution.schedule[i][j] + " ");
+      }
+      System.out.println();
+    }
     return solution;
   }
 }
