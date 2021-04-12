@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class SearchAlgorithm {
+  Random random = new Random();
 
   // Your search algorithm should return a solution in the form of a valid
   // schedule before the deadline given (deadline is given by system time in ms)
@@ -82,11 +83,40 @@ public class SearchAlgorithm {
     return newSolution;
   }
 
-  // This solution uses the genetic algorithm from above
+  // This solution uses the genetic algorithm
   public Schedule solve2(SchedulingProblem problem, long deadline) {
     ArrayList<Schedule> population = new ArrayList<Schedule>();
     population = generateRandomPopulation(problem, 50); // Making a population of size 50
-    return geneticAlgorithm(problem, population, deadline);
+
+    Schedule solution = geneticAlgorithm(problem, population, deadline);
+    return solution;
+  }
+
+  // TODO: improve if possible
+  private ArrayList<Schedule> generateRandomPopulation(SchedulingProblem problem, int populationSize) {
+    ArrayList<Schedule> population = new ArrayList<Schedule>();
+    int nCourses = problem.courses.size();
+    int r, c;
+
+    for (int i = 0; i < populationSize; i++) {
+      Schedule tmp = problem.getEmptySchedule();
+
+      for (int j = 0; j < nCourses; j++) {
+        boolean set = false;
+        while (!set) {
+          r = random.nextInt(tmp.schedule.length);
+          c = random.nextInt(tmp.schedule[r].length);
+
+          if (tmp.schedule[r][c] == -1) {
+            set = true;
+            tmp.schedule[r][c] = j;
+          }
+        }
+      }
+      population.add(tmp);
+    }
+
+    return population;
   }
 
   // TODO: find a good threshold for the fitness function
@@ -95,10 +125,10 @@ public class SearchAlgorithm {
     Schedule y;
     Schedule child;
     ArrayList<Schedule> new_population;
-    Random random = new Random();
-    long time = System.currentTimeMillis() / 1000;
 
-    while ((System.currentTimeMillis() / 1000) - time < deadline) {
+    System.out.println(population.size());
+
+    while (deadline > System.currentTimeMillis()) {
       new_population = new ArrayList<Schedule>();
 
       for (int i = 0; i < population.size(); i++) {
@@ -112,24 +142,36 @@ public class SearchAlgorithm {
       }
       population = new_population;
     }
+    System.out.println(population.size());
     Schedule best = getBestIndividual(problem, population);
+    System.out.println(best);
     System.out.println("BEST INDIV: " + problem.evaluateSchedule(best));
+    System.out.println("\nSOLUTION\n");
+    for (int i = 0; i < best.schedule.length; i++) {
+      for (int j = 0; j < best.schedule[i].length; j++) {
+        System.out.print(best.schedule[i][j] + " ");
+      }
+      System.out.println();
+    }
     return best;
   }
 
   public Schedule reproduce(SchedulingProblem problem, Schedule x, Schedule y) {
-    Random rand = new Random();
     int n = x.schedule.length;
-    int c = rand.nextInt(n);
+    int c = random.nextInt(n);
 
     // This is the same as append(substring(x, 1, c), substring(y, c + 1, n))
     Schedule child = problem.getEmptySchedule();
 
     for (int i = 0; i < x.schedule.length; i++) {
       if (i < c) {
-        child.schedule[i] = x.schedule[i];
+        for (int j = 0; j < child.schedule[i].length; j++) {
+          child.schedule[i][j] = x.schedule[i][j];
+        }
       } else {
-        child.schedule[i] = y.schedule[i];
+        for (int j = 0; j < child.schedule[i].length; j++) {
+          child.schedule[i][j] = y.schedule[i][j];
+        }
       }
     }
     return child;
@@ -140,34 +182,20 @@ public class SearchAlgorithm {
     return s;
   }
 
-  // TODO: implement
-  private ArrayList<Schedule> generateRandomPopulation(SchedulingProblem problem, int populationSize) {
-    ArrayList<Schedule> population = new ArrayList<Schedule>();
-
-    for (int i = 0; i < populationSize; i++) {
-      Schedule tmp = problem.getEmptySchedule();
-
-      for (int r = 0; r < tmp.schedule.length; r++) {
-        for (int j = 0; j < tmp.schedule.length; j++) {
-          tmp.schedule[r][j] = -1;
+  public Schedule getBestIndividual(SchedulingProblem problem, ArrayList<Schedule> population) {
+    if (population.size() > 0) {
+      Schedule best = population.get(0);
+      double bestFitness = problem.evaluateSchedule(best);
+      for (int i = 1; i < population.size(); i++) {
+        double t = problem.evaluateSchedule(population.get(i));
+        if (t > bestFitness) {
+          bestFitness = t;
+          best = population.get(i);
         }
       }
+      return best;
     }
-
-    return population;
-  }
-
-  public Schedule getBestIndividual(SchedulingProblem problem, ArrayList<Schedule> population) {
-    Schedule best = population.get(0);
-    double bestFitness = problem.evaluateSchedule(best);
-    for (int i = 1; i < population.size(); i++) {
-      double t = problem.evaluateSchedule(population.get(i));
-      if (t > bestFitness) {
-        bestFitness = t;
-        best = population.get(i);
-      }
-    }
-    return best;
+    return null;
   }
 
   private Schedule randomSelection(ArrayList<Schedule> population) {
